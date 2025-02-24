@@ -1,23 +1,27 @@
 import sqlite3
+import hashlib
 
-DB_NAME = "phishing_data.db"
-
-# Connect to SQLite
-conn = sqlite3.connect(DB_NAME)
+conn = sqlite3.connect("dbs/user.db")
 cursor = conn.cursor()
 
-# Create table if it doesn't exist
+# Create users table
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS credentials (
+    CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL,
-        password TEXT NOT NULL,
-        page TEXT NOT NULL
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
     )
 ''')
 
-# Commit and close
+# Hash password function
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+# Insert default admin user
+cursor.execute("INSERT OR IGNORE INTO users (username, password) VALUES (?, ?)", 
+               ("admin", hash_password("123")))
+
 conn.commit()
 conn.close()
 
-print("✅ Table 'credentials' created successfully!")
+print("Database initialized with admin user.")
