@@ -57,7 +57,7 @@ def create_new_campaign_db(user_id, campaign_name):
     return campaign_db_path
 
 def create_campaigns_db(user_id, campaign_name):
-    user_folder = f"{USERS_DIR}/{user_id}/{DBS_DIR}"
+    user_folder = f"{USERS_DIR}/{user_id}"
     campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
     db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
 
@@ -88,6 +88,8 @@ def create_campaigns_db(user_id, campaign_name):
 
         conn.commit()
         print(f"Campaign '{campaign_name}' added to the database.")
+        
+        return db_path
         
     except sqlite3.DatabaseError as e:
         print(f"Database error: {e}")
@@ -122,6 +124,21 @@ def create_campaign_js_file(user_id, campaign_name, txt):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
+def fetch_campaigns(user_id):
+    """Fetch campaigns form user."""
+    user_folder = f"{USERS_DIR}/{user_id}"
+    campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
+    db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM campaigns")
+    campaigns = cursor.fetchall()
+
+    conn.close()
+    return campaigns
 
 def fetch_campaign_data(db_path):
     """Fetch content from a specific campaign database."""
@@ -172,23 +189,32 @@ def get_campaigns(user_id):
     if not os.path.exists(user_db_folder):
         return jsonify({"error": "User database folder not found"}), 404
     
-    campaign_db_files = [f for f in os.listdir(user_db_folder) if f.endswith('.db')]
-    
-    campaigns_with_data = []
-
-    for db_file in campaign_db_files:
-        db_path = os.path.join(user_db_folder, db_file)
-
-        campaign_data = fetch_campaign_data(db_path)
+  
+    campaigns= fetch_campaigns(user_id)
         
-        campaigns_with_data.append({
-            "DBS_DIR": db_file,
-            "data": campaign_data
-        })
+    return jsonify(campaigns), 200
 
-    return jsonify(campaigns_with_data), 200
+@app.route('/campaigns/fetch_campaign', methods=['POST'])
+def get_campaign():
+    data = request.json
+    user_id = str(data.get("user_id"))
+    campaign_name = str(data.get("campaign_id"))
+
+    db_path = os.path.join(USERS_DIR, str(user_id), DBS_DIR, f'{campaign_name}.db')
     
+    if not os.path.exists(db_path):
+        return jsonify({"message": "User database folder not found"}), 404
+        
 
+    campaign_data = fetch_campaign_data(db_path)
+        
+    campaigns_with_data = {
+        "name": campaign_name,
+        "data": campaign_data
+    }
+    
+    return jsonify(campaigns_with_data), 200
+       
 @app.route('/campaigns/create', methods=['POST'])
 def create_campaign():
     data = request.json
@@ -199,15 +225,17 @@ def create_campaign():
     campaign_db_file = os.path.join(user_folder, f"{campaign_name}.db")
 
     if not user_id or not campaign_name:
-        return jsonify({"error": "User ID and campaign name are required"}), 400
+        return jsonify({"message": "User ID and campaign name are required"}), 400
 
     new_campaign_db_path = create_new_campaign_db(user_id, campaign_name)
+
     if not new_campaign_db_path:
         return jsonify({"message": "Campaign already exists under this name"}), 409
 
     
     campaigns_db_path = create_campaigns_db(user_id, campaign_name)
     if not campaigns_db_path:
+
         # Remove the campaign created because something when wrong in generating the code
         remove_db_file(campaign_db_file)
         

@@ -1,77 +1,83 @@
-import React, { useState } from 'react';
-import MyInput from './all/Input';
+import React, { useEffect, useState } from 'react';
+import { getCampaigns } from '../services/campaignServices';
+import { CampaignDB } from '../types/types';
+import { getUserFromToken } from '../services/authServices';
+import { Link } from 'react-router-dom';
 import MyButton from './all/Button';
-import MyLoader from './all/Loader';
-import Card from './all/Card';
-import { scanURL, stopScan } from '../services/scanServices';
-import { toast } from 'react-toastify';
 
-const ScanPage: React.FC = () => {
-  const [url, setUrl] = useState('');
-  const [message, setMessage] = useState('');
-  const [scanned, setScanned] = useState(false); // To trigger the animation
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUrl(e.target.value);
-  };
+const Campaigns: React.FC = () => {
+  const [campaigns, setCampaigns] = useState<any[]|null>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleScan = async() => {
-    const result = await scanURL(url)
+  useEffect(() => {
+    const user = getUserFromToken()
+    if (!user)
+        return
     
-    if (result) {
-        setScanned(true)
-        toast.success("Scan Running")
-        setMessage(result.message);
-        console.log(result)
-    }
-  
-  };
+    const fetchCampaigns = async () => {
+      try {
+        const response = await getCampaigns(user.id);
+        setCampaigns(response);
+      } catch (err) {
+        setError('Failed to fetch campaigns');
+        console.error(err);
+      }
+    };
 
-  const abortScan = async() => {
-    const result = await stopScan()
-    console.log(result)
-    if (result) {
-      setScanned(false)
-      toast.error("Scan Aborted")
-    }
-    
-  }
-
+    fetchCampaigns();
+  }, []); 
 
   return (
-    <div className='scan-page'>
-      <div style={{ display: scanned ? 'inline':'none' }} className="scan-box-run">
-        <Card title=''>
-          <MyLoader loading={true} size={30}/>
-            { message && <p>{message}</p>}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <MyButton 
-                label={"Stop Scan"} 
-                color='danger'
-                onClick={abortScan}/>
-          </div>
-        </Card>
-       
-      </div>
-      
-      <div style={{ display: !scanned ? 'inline':'none' }} className="scan-box">
-        <Card title='Url Scanner'>
-          <MyInput
-                type="text"
-                placeholder="Enter URL 10.10.X.X"
-                value={url}
-                onChange={handleChange}
-            />
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <h2>Campaigns</h2>
 
+        </div>
+        <div>
+          <Link to='/campaigns/new-campaign'>
             <MyButton 
-                label={"Scan Now!"} 
-                onClick={handleScan}/>
-        </Card>
-      </div>
+              label='+ New Campaign'
+              color='success'/>
+          </Link>
+        </div>
 
-    
+      </div>
+      {error && <p>{error}</p>}
+      {campaigns && campaigns.length > 0 && 
+          <table>
+            <thead>
+              <tr>
+                {/* <th>ID</th> */}
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((c:any, i) => (
+                <tr key={i}>
+                  {/* <td>{c[0]}</td> */}
+                  <td>{c[1]}</td> 
+                  <td>{c[2]}</td>
+                  <td>{c[3]}</td>
+                  <td>
+                    <Link to={`${c[1]}`}>
+                      <MyButton label='View'/>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+            
+          
+      }
+    { !campaigns && <p>You have no campaign</p>}
     </div>
   );
 };
 
-export default ScanPage;
+export default Campaigns;

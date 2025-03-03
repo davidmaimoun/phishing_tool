@@ -7,17 +7,17 @@ import MyButton from './all/Button';
 
 
 const Campaigns: React.FC = () => {
-  const [campaigns, setCampaigns] = useState<CampaignDB[]|null>([]);
+  const [campaigns, setCampaigns] = useState<any[]|null>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const user = getUserFromToken()
     if (!user)
         return
+    
     const fetchCampaigns = async () => {
       try {
         const response = await getCampaigns(user.id);
-        
         setCampaigns(response);
       } catch (err) {
         setError('Failed to fetch campaigns');
@@ -36,7 +36,7 @@ const Campaigns: React.FC = () => {
 
         </div>
         <div>
-          <Link to='new-campaign'>
+          <Link to='/campaigns/new-campaign'>
             <MyButton 
               label='+ New Campaign'
               color='success'/>
@@ -45,36 +45,39 @@ const Campaigns: React.FC = () => {
 
       </div>
       {error && <p>{error}</p>}
-      {campaigns && 
-        campaigns.length > 0 && 
-          campaigns.map((campaign, index) => (
-            campaign.data.length > 0 ?
-            (<div key={index}>
-              <h3>{campaign.db_name}</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Password</th>
-                    <th>Page</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaign.data.map((d, i) => (
-                    <tr key={i}>
-                      <td>{d[0]}</td>
-                      <td>{d[2]}</td>
-                      <td>{d[3]}</td>
-                      <td>{d[1]}</td> 
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            ):
-            (<><h3>{campaign.db_name}</h3><i>is empty</i></>)
-          ))
+      {campaigns && campaigns.length > 0 && 
+          <table>
+            <thead>
+              <tr>
+                {/* <th>ID</th> */}
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {campaigns.map((c:any, i) => (
+                <tr key={i}>
+                  {/* <td>{c[0]}</td> */}
+                  <td>{c[1]}</td> 
+                  <td>{c[2]}</td>
+                  <td>{c[3]}</td>
+                  <td>
+                    <Link to={`${c[1]}`}>
+                      <MyButton label='View'/>
+                    </Link>
+                  </td>
+                  <td>
+                    <MyButton label='JS Script' color='warning'/>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+            
+          
       }
     { !campaigns && <p>You have no campaign</p>}
     </div>
