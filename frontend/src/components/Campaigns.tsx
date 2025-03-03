@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 import MyButton from './all/Button';
 
 
-
 const Campaigns: React.FC = () => {
   const [campaigns, setCampaigns] = useState<CampaignDB[]|null>([]);
   const [error, setError] = useState<string | null>(null);
@@ -46,32 +45,36 @@ const Campaigns: React.FC = () => {
 
       </div>
       {error && <p>{error}</p>}
-      {campaigns && campaigns.length > 0 && 
-        campaigns.map((campaign, index) => (
-          <div key={index}>
-            <h3>{campaign.db_name}</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Username</th>
-                  <th>Password</th>
-                  <th>Page</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaign.data.map((d, i) => (
-                  <tr key={i}>
-                    <td>{d[0]}</td>
-                    <td>{d[2]}</td>
-                    <td>{d[3]}</td>
-                    <td>{d[1]}</td> 
+      {campaigns && 
+        campaigns.length > 0 && 
+          campaigns.map((campaign, index) => (
+            campaign.data.length > 0 ?
+            (<div key={index}>
+              <h3>{campaign.db_name}</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Page</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))
+                </thead>
+                <tbody>
+                  {campaign.data.map((d, i) => (
+                    <tr key={i}>
+                      <td>{d[0]}</td>
+                      <td>{d[2]}</td>
+                      <td>{d[3]}</td>
+                      <td>{d[1]}</td> 
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            ):
+            (<><h3>{campaign.db_name}</h3><i>is empty</i></>)
+          ))
       }
     { !campaigns && <p>You have no campaign</p>}
     </div>
