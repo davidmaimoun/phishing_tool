@@ -4,12 +4,22 @@ export interface User {
     username: string;
   }
 
-export interface Templates {
+export interface Template {
   name:string
   template:string
 }
 
+export interface CampaignData {
+  id: string 
+  page: string 
+  username: string 
+  password: string 
+  ip: string 
+  user_agent: string 
+  timestamp: string 
+}
+
 export interface CampaignDB {
-  db_name: string;
-  data: any[];
+  name: string;
+  data: CampaignData[];
 }

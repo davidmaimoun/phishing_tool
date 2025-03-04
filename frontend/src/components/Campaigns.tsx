@@ -34,11 +34,16 @@ const Campaigns: React.FC = () => {
     fetchCampaigns();
   }, []); 
 
-  const fetchCampaignScript = async(campaignId:string) => {
+  const fetchCampaignScript = async(campaignId:string, template:string) => {
 
     if (user) {
-      const response = await getCampaignScript({ user_id: user.id, campaign_id: campaignId})
+      const response = await getCampaignScript({ 
+        user_id: user.id, 
+        campaign_id: campaignId,
+        template
+      })
       if(response && response.js) {
+        
         setJsScript(response.js)
         setWindowDisplay(true)
       }
@@ -71,6 +76,7 @@ const Campaigns: React.FC = () => {
                 {/* <th>ID</th> */}
                 <th>Date created</th>
                 <th>Name</th>
+                <th>Template</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -81,6 +87,7 @@ const Campaigns: React.FC = () => {
                   {/* <td>{c[0]}</td> */}
                   <td>{c[2]}</td>
                   <td>{c[1]}</td> 
+                  <td>{c[4]}</td> 
                   <td>
                     <Link to={`${c[1]}`}>
                       <MyButton label='View'/>
@@ -90,7 +97,7 @@ const Campaigns: React.FC = () => {
                     <MyButton 
                       label='Script' 
                       color='warning'
-                      onClick={() => fetchCampaignScript(c[1])}
+                      onClick={() => fetchCampaignScript(c[1], c[4])}
                       />
                   </td>
                 </tr>

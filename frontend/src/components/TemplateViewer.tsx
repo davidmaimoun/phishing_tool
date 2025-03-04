@@ -1,21 +1,15 @@
 import React from "react";
-import { Templates } from "../types/types";
 
-const TemplateViewer: React.FC<{ templates: Templates[] }> = ({ templates }) => {
+const TemplateViewer: React.FC<{ template: string }> = ({ template }) => {
   return (
-    <div className="grid-container">
-      {templates.map((template, index) => (
-        <div key={index}>
-          <h3>📄 {template.name}</h3>
-          <div  className="card">
-            <iframe
-              srcDoc={template.template}
-              className="iframe"
-            />
-          </div>
+      <div >
+        <div >
+          <iframe
+            srcDoc={template}
+            className="iframe"
+          />
         </div>
-      ))}
-    </div>
+      </div>
   );
 };
 

