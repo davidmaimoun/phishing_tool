@@ -5,7 +5,7 @@ import sqlite3
 from datetime import datetime
 from flask_cors import CORS
 from flask import Flask, render_template, request, redirect, jsonify
-from utils.create_js import create_js_script
+from utils.html_manipulation import create_js_script
 from utils.date_and_time import get_current_date
 app = Flask(__name__)
 CORS(app)
@@ -60,7 +60,7 @@ def create_new_campaign_db(user_id, campaign_name):
 
     return campaign_db_path
 
-def create_campaigns_db(user_id, campaign_name):
+def create_campaigns_db(user_id, campaign_name, template=''):
     user_folder = f"{USERS_DIR}/{user_id}"
     campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
     db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
@@ -72,13 +72,15 @@ def create_campaigns_db(user_id, campaign_name):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+        
         # Create the campaigns table if it doesn't exist
-        cursor.execute("""
+        cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS campaigns (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 date_created DATE,
-                time_created TIME
+                time_created TIME,
+                template TEXT DEFAULT {template}
             )
         """)
 
@@ -86,9 +88,9 @@ def create_campaigns_db(user_id, campaign_name):
 
         # Insert new campaign if it doesn't exist
         cursor.execute("""
-            INSERT INTO campaigns (name, date_created, time_created)
-            VALUES (?, ?, ?)
-        """, (campaign_name, date_created, time_created))
+            INSERT INTO campaigns (name, date_created, time_created, template)
+            VALUES (?, ?, ?, ?)
+        """, (campaign_name, date_created, time_created, template))
 
         conn.commit()
         print(f"Campaign '{campaign_name}' added to the database.")
@@ -247,6 +249,8 @@ def create_campaign():
     data = request.json
     user_id = data.get("user_id")
     campaign_name = data.get("name")
+    template = data.get("template")
+
 
     user_folder = f"{USERS_DIR}/{user_id}/{DBS_DIR}"
     campaign_db_file = os.path.join(user_folder, f"{campaign_name}.db")
@@ -260,7 +264,7 @@ def create_campaign():
         return jsonify({"message": "Campaign already exists under this name"}), 409
 
     
-    campaigns_db_path = create_campaigns_db(user_id, campaign_name)
+    campaigns_db_path = create_campaigns_db(user_id, campaign_name, template)
     if not campaigns_db_path:
         # Remove the campaign created because something when wrong in generating the code
         remove_db_file(campaign_db_file)

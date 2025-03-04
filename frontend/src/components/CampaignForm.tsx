@@ -17,6 +17,7 @@ const CampaignForm: React.FC = () => {
   const [isWindowDisplay, setWindowDisplay] = useState<boolean>(false)
   const [campaignName, setCampaignName] = useState("");
   const [jsScript, setJsScript] = useState("");
+  const [templateWanted, setTemplateWanted] = useState<string>('');
   const [templates, setTemplates] = useState<Templates[]>([]);
   const [error, setError] = useState("");
 
@@ -57,6 +58,7 @@ const CampaignForm: React.FC = () => {
       const response = await createCampaign({
         user_id: user.id,
         name: campaignName,
+        template: 'facebook'
       });
       if (response) {
         setJsScript(response.js)

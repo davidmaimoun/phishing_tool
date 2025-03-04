@@ -1,5 +1,6 @@
 
 def create_js_script(user_id, campaign_name):
+
     js_code = """
         <script>
             document.getElementById("loginForm").addEventListener("submit", async function(event) {
@@ -37,3 +38,13 @@ def create_js_script(user_id, campaign_name):
         """
 
     return js_code
+
+def add_script_to_html(html: str, script: str) -> str:
+    closing_html_pos = html.rfind("</html>")
+
+    if closing_html_pos != -1:
+        script_tag = f"<script>{script}</script>"
+        
+        html = html[:closing_html_pos] + script_tag + html[closing_html_pos:]
+
+    return html

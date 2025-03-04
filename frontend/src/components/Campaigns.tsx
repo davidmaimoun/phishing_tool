@@ -64,13 +64,13 @@ const Campaigns: React.FC = () => {
       </div>
       {error && <p>{error}</p>}
       {campaigns && campaigns.length > 0 && 
-          <table>
+          <table >
+          
             <thead>
               <tr>
                 {/* <th>ID</th> */}
+                <th>Date created</th>
                 <th>Name</th>
-                <th>Date</th>
-                <th>Time</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -79,9 +79,8 @@ const Campaigns: React.FC = () => {
               {campaigns.map((c:any, i) => (
                 <tr key={i}>
                   {/* <td>{c[0]}</td> */}
-                  <td>{c[1]}</td> 
                   <td>{c[2]}</td>
-                  <td>{c[3]}</td>
+                  <td>{c[1]}</td> 
                   <td>
                     <Link to={`${c[1]}`}>
                       <MyButton label='View'/>
