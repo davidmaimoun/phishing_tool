@@ -9,6 +9,16 @@ export interface Template {
   template:string
 }
 
+export interface CampaignsData {
+  id: string
+  name: string
+  page_name: string
+  template: boolean
+  date_created: string
+  time_created: string
+  users_number: number
+}
+
 export interface CampaignData {
   id: string 
   page: string 

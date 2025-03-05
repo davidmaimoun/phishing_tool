@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getCampaigns, getCampaignScript } from '../services/campaignServices';
-import { CampaignDB, User } from '../types/types';
+import { CampaignsData, CampaignsDB, User } from '../types/types';
 import { getUserFromToken } from '../services/authServices';
 import { Link } from 'react-router-dom';
 import MyButton from './all/Button';
@@ -8,11 +8,12 @@ import WindowScript from './WindowScript';
 
 
 const Campaigns: React.FC = () => {
-  const [campaigns, setCampaigns] = useState<any[]|null>([]);
+  const [campaigns, setCampaigns] = useState<CampaignsDB[]|null>([]);
   const [error, setError] = useState<string | null>(null);
+  const [pageName, setPageName] = useState("");
   const [isWindowDisplay, setWindowDisplay] = useState<boolean>(false)
   const [user, setUser] = useState<User|null>(null);
-  const [jsScript, setJsScript] = useState<string|null>("");
+  const [jsScript, setJsScript] = useState<string>("");
   
   useEffect(() => {
     const currentUser = getUserFromToken()
@@ -25,6 +26,7 @@ const Campaigns: React.FC = () => {
       try {
         const response = await getCampaigns(currentUser.id);
         setCampaigns(response);
+
       } catch (err) {
         setError('Failed to fetch campaigns');
         console.error(err);
@@ -34,16 +36,17 @@ const Campaigns: React.FC = () => {
     fetchCampaigns();
   }, []); 
 
-  const fetchCampaignScript = async(campaignId:string, template:string) => {
+  const fetchCampaignScript = async(campaignId:string, page_name:string, template:boolean) => {
 
     if (user) {
       const response = await getCampaignScript({ 
         user_id: user.id, 
         campaign_id: campaignId,
+        page_name,
         template
       })
+
       if(response && response.js) {
-        
         setJsScript(response.js)
         setWindowDisplay(true)
       }
@@ -76,20 +79,22 @@ const Campaigns: React.FC = () => {
                 {/* <th>ID</th> */}
                 <th>Date created</th>
                 <th>Name</th>
-                <th>Template</th>
+                <th>Page</th>
+                <th>Users Number</th>
                 <th></th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((c:any, i) => (
+              {campaigns.map((c:CampaignsData, i) => (
                 <tr key={i}>
                   {/* <td>{c[0]}</td> */}
-                  <td>{c[2]}</td>
-                  <td>{c[1]}</td> 
-                  <td>{c[4]}</td> 
+                  <td>{c.date_created}</td> 
+                  <td>{c.name}</td>
+                  <td>{c.page_name}</td> 
+                  <td>{c.users_number}</td> 
                   <td>
-                    <Link to={`${c[1]}`}>
+                    <Link to={`${c.name}`}>
                       <MyButton label='View'/>
                     </Link>
                   </td>
@@ -97,7 +102,10 @@ const Campaigns: React.FC = () => {
                     <MyButton 
                       label='Script' 
                       color='warning'
-                      onClick={() => fetchCampaignScript(c[1], c[4])}
+                      onClick={() => {
+                        fetchCampaignScript(c.name, c.page_name, c.template)
+                        setPageName(c.page_name)
+                      }}
                       />
                   </td>
                 </tr>
@@ -112,7 +120,7 @@ const Campaigns: React.FC = () => {
     {
       isWindowDisplay &&
         <WindowScript 
-          title={"Test.db"} 
+          title={pageName} 
           scriptContent={jsScript}
           onClose={() => setWindowDisplay(false)} />
     }

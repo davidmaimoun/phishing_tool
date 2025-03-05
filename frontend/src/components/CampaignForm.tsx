@@ -16,8 +16,9 @@ const CampaignForm: React.FC = () => {
   const { selected, Radio } = useRadio("No", "Yes");
   const [isWindowDisplay, setWindowDisplay] = useState<boolean>(false)
   const [campaignName, setCampaignName] = useState("");
+  const [pageName, setPageName] = useState("");
   const [jsScript, setJsScript] = useState("");
-  const [templateWanted, setTemplateWanted] = useState<string>('');
+  const [isTemplateWanted, setTemplateWanted] = useState<boolean>(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [buttonChosen, setButtonChosen] = useState<number|null>()
   const [error, setError] = useState("");
@@ -29,13 +30,11 @@ const CampaignForm: React.FC = () => {
         
         if (t) 
           setTemplates(t);
-
       };
-  
       fetchTemplates(); 
     }
     else 
-      setTemplateWanted('')
+      setTemplateWanted(false)
   }, [selected]);
   
   const fetchAllTemplates = async () => {
@@ -61,8 +60,10 @@ const CampaignForm: React.FC = () => {
       const response = await createCampaign({
         user_id: user.id,
         name: campaignName,
-        template: templateWanted
+        template: isTemplateWanted,
+        page_name: pageName
       });
+
       if (response) {
         setJsScript(response.js)
         setWindowDisplay(true)
@@ -72,8 +73,6 @@ const CampaignForm: React.FC = () => {
       setError("Error creating campaign.");
     }
   };
-
- 
 
   return (
     <>
@@ -106,7 +105,8 @@ const CampaignForm: React.FC = () => {
                       color={buttonChosen === index ? "success" : "secondary"}
                       onClick={
                         () => {
-                          setTemplateWanted(template.name)
+                          setTemplateWanted(true)
+                          setPageName(template.name)
                           setButtonChosen(index)
                         }
                       }
@@ -117,33 +117,33 @@ const CampaignForm: React.FC = () => {
             ) 
             :
             <>
-            <label htmlFor="">Page Name </label>
-            <input
-              type="text"
-              placeholder="My Page"
-              value={templateWanted}
-              onChange={(e) => setTemplateWanted(e.target.value)}
-            />
-            <div className="card">
-              ⚠️⚠️⚠️
-              <p>In creating the campaign, you will get a JS script to add in your own template.</p>
-              <p>The form must contain:</p>
-              <ul>
-              <li>An input attribut: <i>name="email"</i> </li>
-              <li>An input attribut: <i>name="pass"</i> </li>
-              </ul>
-            </div>
+              <label htmlFor="">Page Name </label>
+              <input
+                type="text"
+                placeholder="My Page"
+                value={pageName}
+                onChange={(e) => setPageName(e.target.value)}
+              />
+              <div className="card">
+                ⚠️⚠️⚠️
+                <p>In creating the campaign, you will get a JS script to add in your own template.</p>
+                <p>The form must contain:</p>
+                <ul>
+                  <li>An input attribut: <i>name="email"</i> </li>
+                  <li>An input attribut: <i>name="pass"</i> </li>
+                </ul>
+              </div>
             </>
           }
 
           <div className="separator"></div>
           {
-            (campaignName && templateWanted) ? (
+            (campaignName && pageName) ? (
               <>
               <p>💁 Before Submit :</p>
               <ul>
                 <li>Your campagne name is <i>{campaignName}</i></li>
-                <li>Your template is <i>{selected && templateWanted ? templateWanted : "your own template"}</i></li>
+                <li>Your template is <i>{selected && campaignName ? campaignName : "your own template"}</i></li>
               </ul>
               <br></br>
               <MyButton type="submit" onClick={handleSubmit} label={"Create Campaign"} />
@@ -156,7 +156,7 @@ const CampaignForm: React.FC = () => {
     {
       isWindowDisplay &&
         <WindowScript 
-          title={"Test.db"} 
+          title={pageName} 
           scriptContent={jsScript}
           onClose={() => setWindowDisplay(false)} />
     }

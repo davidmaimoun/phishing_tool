@@ -1,14 +1,14 @@
-import { CampaignDB } from "../types/types";
+import { CampaignDB, CampaignsData } from "../types/types";
 import apiService from "./apiServices";
 
 const apiEndpoint = '/campaigns'
 
-export const getCampaigns = async(userId: string): Promise<any[]|null> => {
+export const getCampaigns = async(userId: string): Promise<CampaignsDate[]|null> => {
     return await apiService.get(`/campaigns/${userId}`)
 }
 
-export const getCampaign = async(data: any): Promise<CampaignDB|null> => {
-    return await apiService.post<CampaignDB, CampaignDB>(`${apiEndpoint}/fetch_campaign`, data);
+export const getCampaign = async(data: any): Promise<CampaignDB[]|null> => {
+    return await apiService.post<CampaignDB[], CampaignDB[]>(`${apiEndpoint}/fetch_campaign`, data);
 }
 
 export const getCampaignScript = async (data: any): Promise<{ js: string } | null> => {
