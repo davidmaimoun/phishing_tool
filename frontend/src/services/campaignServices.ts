@@ -3,7 +3,7 @@ import apiService from "./apiServices";
 
 const apiEndpoint = '/campaigns'
 
-export const getCampaigns = async(userId: string): Promise<CampaignsDate[]|null> => {
+export const getCampaigns = async(userId: string): Promise<CampaignsData[]|null> => {
     return await apiService.get(`/campaigns/${userId}`)
 }
 

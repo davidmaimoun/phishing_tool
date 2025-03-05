@@ -8,23 +8,26 @@ import { getAllTemplates } from "../services/templateServices";
 import { useRadio } from "./hooks/useRadio";
 import { Template } from "../types/types";
 import WindowScript from "./WindowScript";
+import MyBadge from "./all/Badge";
 
 
 
 const CampaignForm: React.FC = () => {
   const { user } = useAuth(); 
-  const { selected, Radio } = useRadio("No", "Yes");
+  const { selected: isTemplateSelected, Radio: RadioTemplateSeletion } = useRadio("No", "Yes");
+  
   const [isWindowDisplay, setWindowDisplay] = useState<boolean>(false)
   const [campaignName, setCampaignName] = useState("");
   const [pageName, setPageName] = useState("");
   const [jsScript, setJsScript] = useState("");
   const [isTemplateWanted, setTemplateWanted] = useState<boolean>(false);
+  const [targetsNumber, setTargetsNumber] = useState<number>(1);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [buttonChosen, setButtonChosen] = useState<number|null>()
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (selected) {
+    if (isTemplateSelected) {
       const fetchTemplates = async () => {
         const t = await fetchAllTemplates(); 
         
@@ -35,7 +38,7 @@ const CampaignForm: React.FC = () => {
     }
     else 
       setTemplateWanted(false)
-  }, [selected]);
+  }, [isTemplateSelected]);
   
   const fetchAllTemplates = async () => {
     const response = await getAllTemplates();
@@ -61,7 +64,8 @@ const CampaignForm: React.FC = () => {
         user_id: user.id,
         name: campaignName,
         template: isTemplateWanted,
-        page_name: pageName
+        page_name: pageName,
+        targets_number: targetsNumber
       });
 
       if (response) {
@@ -91,9 +95,9 @@ const CampaignForm: React.FC = () => {
           
           <h2>Templates</h2>
           <p>Do you want to use our template?</p>
-          {Radio}
+          {RadioTemplateSeletion}
           {
-            selected ? 
+            isTemplateSelected ? 
             (
               <div className="grid-container">
                 {templates.map((template, index) => (
@@ -136,17 +140,36 @@ const CampaignForm: React.FC = () => {
             </>
           }
 
+
           <div className="separator"></div>
+          
+          <h2>Targets</h2>
+          <p>Add the targets number you want to aim (this will help us to do statistics)</p>
+          <label htmlFor="">Targets Expected </label>
+          <input
+            type="number"
+            min={1}
+            placeholder="Number of targets to aim"
+            value={targetsNumber}
+            onChange={(e) => setTargetsNumber(Number(e.target.value))}
+          />
+
+
+
           {
-            (campaignName && pageName) ? (
+            (campaignName && pageName && targetsNumber) ? (
               <>
-              <p>💁 Before Submit :</p>
-              <ul>
-                <li>Your campagne name is <i>{campaignName}</i></li>
-                <li>Your template is <i>{selected && campaignName ? campaignName : "your own template"}</i></li>
-              </ul>
-              <br></br>
-              <MyButton type="submit" onClick={handleSubmit} label={"Create Campaign"} />
+                <div className="separator"></div>
+                <p>💁 Before Submitting:</p>
+                <ul>
+                  <li style={{"marginBottom":"8px"}}>Your campagne name is  <MyBadge label={campaignName}/></li>
+                  <li style={{"marginBottom":"8px"}}>Your template is       <MyBadge label={isTemplateSelected && campaignName ? campaignName : "your own template"} /></li>
+                  <li>Your targets number is <MyBadge label={String(targetsNumber)} /></li>
+
+                </ul>
+                <br></br>
+                <br></br>
+                <MyButton type="submit" onClick={handleSubmit} label={"Create Campaign"} />
               </>
             ) : null
           }

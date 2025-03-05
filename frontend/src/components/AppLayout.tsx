@@ -34,6 +34,10 @@ const AppLayout: React.FC = () => {
           <aside className="right-side">
           </aside>
         </div>
+
+        <div className="footer">
+          werer
+        </div>
   
     </div>
   

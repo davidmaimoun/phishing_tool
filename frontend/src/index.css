@@ -80,6 +80,10 @@ h1 {
   margin: 40px 0;
 }
 
+.badge {
+  padding: 4px;
+  border-radius: 8px;
+}
 
 /* Button styles ***********************************************/
 .btn {
@@ -195,6 +199,31 @@ input::placeholder {
   font-style: italic; 
 }
 
+textarea {
+  padding: 8px 20px; 
+  margin: 2rem 8px;
+  border: 2px solid var(--secondary-color);
+  border-radius: 8px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 5px skyblue;
+}
+
+textarea:hover {
+  border-color: var(--primary-color);
+}
+
+textarea::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
 
 /* App Skeleton ****************************/
 .app-container {
@@ -246,7 +275,7 @@ input::placeholder {
 
 .footer {
   color: white;
-  padding: 10px;
+  padding: 20px;
   text-align: center;
   flex-shrink: 0; /* Prevent shrinking */
 }

