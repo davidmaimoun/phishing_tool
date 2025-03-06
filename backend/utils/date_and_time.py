@@ -7,4 +7,7 @@ def get_current_date():
 
     formatted_time = current_datetime.strftime("%H:%M:%S")
 
-    return formatted_date, formatted_time
+    day_of_week = current_datetime.strftime("%a") 
+
+
+    return formatted_date, formatted_time, day_of_week

