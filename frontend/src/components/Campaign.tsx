@@ -3,6 +3,7 @@ import { getCampaign } from '../services/campaignServices';
 import { CampaignDB } from '../types/types';
 import { useParams } from 'react-router-dom';
 import { getUserFromToken } from '../services/authServices';
+import MyTitle from './all/Title';
 
 
 const Campaign: React.FC = () => {
@@ -19,7 +20,6 @@ const Campaign: React.FC = () => {
             try {
                const response = await getCampaign({user_id: user.id, campaign_id: id});
                setCampaign(response)
-               console.log(response)
             } 
             catch (err) {
                console.error(err);
@@ -28,32 +28,33 @@ const Campaign: React.FC = () => {
         };
 
         fetchCampaign()
-
     }
   }, []); 
 
   return (
     <div>
-        <h2>Campaign</h2>
+        <MyTitle name={'Campaign'} variant='subheader'/>
         <br></br>
-      {campaign && campaign.data.length > 0 && 
+      {campaign && campaign.data && 
           <>
             <h3>{campaign.name}</h3>
             <table>
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Username</th>
-                  <th>Password</th>
-                  <th>Page</th>
-                  <th>IP</th>
-                  <th>User-Agent</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Page</th>
+                <th>IP</th>
+                <th>User-Agent</th>
                 </tr>
               </thead>
               <tbody>
                 {campaign.data.map((c, i) => (
                   <tr key={i}>
-                    <td>{c.timestamp}</td>
+                    <td>{c.date}</td>
+                    <td>{c.time}</td>
                     <td>{c.username}</td>
                     <td>{c.password}</td>
                     <td>{c.page}</td> 

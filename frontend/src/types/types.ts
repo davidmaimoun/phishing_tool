@@ -26,10 +26,16 @@ export interface CampaignData {
   password: string 
   ip: string 
   user_agent: string 
-  timestamp: string 
+  date: string 
+  time: string 
 }
 
 export interface CampaignDB {
   name: string;
   data: CampaignData[];
+}
+
+export interface CampaignsDB {
+  name: string;
+  data: CampaignsData;
 }

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { getCampaigns, getCampaignScript } from '../services/campaignServices';
-import { CampaignsData, CampaignsDB, User } from '../types/types';
+import { User, CampaignsDB } from '../types/types';
 import { getUserFromToken } from '../services/authServices';
 import { Link } from 'react-router-dom';
 import MyButton from './all/Button';
 import WindowScript from './WindowScript';
+import MyTitle from './all/Title';
 
 
 const Campaigns: React.FC = () => {
@@ -58,8 +59,7 @@ const Campaigns: React.FC = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
-          <h2>Campaigns</h2>
-
+          <MyTitle name={'Campaigns'} variant='subheader'/>  
         </div>
         <div>
           <Link to='/campaigns/new-campaign'>
@@ -83,18 +83,20 @@ const Campaigns: React.FC = () => {
                 <th>Users Number</th>
                 <th></th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((c:CampaignsData, i) => (
+              {campaigns.map(({ data: campaignData }: CampaignsDB, i) => (
+                
                 <tr key={i}>
                   {/* <td>{c[0]}</td> */}
-                  <td>{c.date_created}</td> 
-                  <td>{c.name}</td>
-                  <td>{c.page_name}</td> 
-                  <td>{c.users_number}</td> 
+                  <td>{campaignData.date_created}</td> 
+                  <td>{campaignData.name}</td>
+                  <td>{campaignData.page_name}</td> 
+                  <td>{campaignData.users_number}</td> 
                   <td>
-                    <Link to={`${c.name}`}>
+                    <Link to={`${campaignData.name}`}>
                       <MyButton label='View'/>
                     </Link>
                   </td>
@@ -103,11 +105,12 @@ const Campaigns: React.FC = () => {
                       label='Script' 
                       color='warning'
                       onClick={() => {
-                        fetchCampaignScript(c.name, c.page_name, c.template)
-                        setPageName(c.page_name)
+                        fetchCampaignScript(campaignData.name, campaignData.page_name, campaignData.template)
+                        setPageName(campaignData.page_name)
                       }}
                       />
                   </td>
+                  
                 </tr>
               ))}
             </tbody>

@@ -173,6 +173,8 @@ h1 {
   border-radius: 0 10px 10px 0;
 }
 
+
+/* Input *****************************************/
 input {
   padding: 8px 20px; 
   margin: 2rem 8px;
@@ -222,6 +224,31 @@ textarea:hover {
 textarea::placeholder {
   color: #aaa;
   font-style: italic;
+}
+
+
+/* Select ****************************/
+.custom-select {
+  padding: 8px;
+  margin: 1rem 8px;
+  border: 2px solid var(--secondary-color);
+  border-radius: 8px;
+  font-size: 16px;
+  width: 300px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  background-color: white;
+  cursor: pointer;
+}
+
+.custom-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 5px skyblue;
+}
+
+.custom-select:hover {
+  border-color: var(--primary-color);
 }
 
 
