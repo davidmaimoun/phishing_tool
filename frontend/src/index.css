@@ -260,6 +260,28 @@ textarea::placeholder {
 }
 
 
+/* Dashboard ********************************/
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Space between rows */
+}
+
+.dashboard-splitted {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.chart {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+
+
 /* Header */
 .header {
   display: flex;

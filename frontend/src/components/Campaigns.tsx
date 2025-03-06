@@ -93,7 +93,7 @@ const Campaigns: React.FC = () => {
                   <td>{campaignData.date_created}</td> 
                   <td>{campaignData.name}</td>
                   <td>{campaignData.page_name}</td> 
-                  <td>{campaignData.users_number}</td> 
+                  <td>{campaignData.targets_number}</td> 
                   <td>
                     <Link to={`${campaignData.name}`}>
                       <MyButton label='View'/>

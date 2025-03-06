@@ -16,7 +16,8 @@ export interface CampaignsData {
   template: boolean
   date_created: string
   time_created: string
-  users_number: number
+  targets_number: number,
+  phished_number: number
 }
 
 export interface CampaignData {
@@ -28,6 +29,7 @@ export interface CampaignData {
   user_agent: string 
   date: string 
   time: string 
+  day: string
 }
 
 export interface CampaignDB {

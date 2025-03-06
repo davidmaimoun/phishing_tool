@@ -97,7 +97,7 @@ def create_campaigns_db(user_id, campaign_name, page_name, targets_number=0, tem
                 time_created TIME,
                 page_name TEXT DEFAULT "{page_name}",
                 targets_number INTEGER DEFAULT {targets_number},
-                phised_number INTEGER DEFAULT 0,
+                phished_number INTEGER DEFAULT 0,
                 template INTEGER DEFAULT {1 if template else 0}
             )
         """)
@@ -156,13 +156,13 @@ def fetch_data(db_path, table_name):
     # Convert to list of dictionaries
     return [dict(zip(columns, row)) for row in campaigns]
 
-def update_phised_number(db_path, campaign_name, increment: int = 1):
+def update_phished_number(db_path, campaign_name, increment: int = 1):
     """
-    Update the phised_number for a specific campaign by incrementing it.
+    Update the phished_number for a specific campaign by incrementing it.
 
     :param db_path: Path to the SQLite database.
     :param campaign_name: Name of the campaign to update.
-    :param increment: The number to increase phised_number by (default is 1).
+    :param increment: The number to increase phished_number by (default is 1).
     """
     try:
         conn = sqlite3.connect(db_path)
@@ -170,20 +170,20 @@ def update_phised_number(db_path, campaign_name, increment: int = 1):
 
         cursor.execute("""
             UPDATE campaigns
-            SET phised_number = phised_number + ?
+            SET phished_number = phished_number + ?
             WHERE name = ?
         """, (increment, campaign_name))
 
         if cursor.rowcount == 0:  # No rows updated
             print(f"Error: No campaign found with name '{campaign_name}'")
         else:
-            print(f"Successfully updated phised_number for campaign '{campaign_name}'")
+            print(f"Successfully updated phished_number for campaign '{campaign_name}'")
 
         conn.commit()
         conn.close()
 
     except sqlite3.Error as e:
-        print(f"Error updating phised_number: {e}")
+        print(f"Error updating phished_number: {e}")
 
 def remove_db_file(file_name):
     if os.path.exists(file_name):
@@ -360,13 +360,13 @@ def create_campaign():
 
 # Call it when a target open the page, before submitting
 @app.route('/campaign/<user_id>/<campaign_name>/phished', methods=['GET', 'POST'])
-def campaign_page_phised(user_id, campaign_name):
+def campaign_page_phished(user_id, campaign_name):
     campaigns_db_path = os.path.join(USERS_DIR, user_id, CAMPAIGNS_DIR, "campaigns.db")
 
     if not os.path.exists(campaigns_db_path):
         return 'Not found', 404
     
-    update_phised_number(
+    update_phished_number(
         db_path=campaigns_db_path, 
         campaign_name=campaign_name)
     
