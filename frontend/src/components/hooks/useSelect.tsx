@@ -28,5 +28,5 @@ export const useSelect = (
     </select>
   );
 
-  return { selected, SelectComponent, options, setOptions };
+  return { selected, setSelected, SelectComponent, options, setOptions };
 };

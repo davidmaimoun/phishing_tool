@@ -4,8 +4,8 @@ import { useSelect } from './hooks/useSelect';
 import { getUserFromToken } from '../services/authServices';
 import { getCampaign, getCampaigns } from '../services/campaignServices';
 import { CampaignDB, CampaignsDB, User } from '../types/types';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ChartData } from 'chart.js';
-import { LineChart, MyChartData, BarChart, StackedPercentBarChart, DoughnutChart } from "./Charts";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement } from 'chart.js';
+import { LineChart, MyChartData, BarChart, DoughnutChart, StackedPercentBarChart } from "./Charts";
 
 ChartJS.register(
   CategoryScale,
@@ -40,7 +40,6 @@ const Dashboard:React.FC = () => {
         const fetchCampaigns = async () => {
           try {
             const response = await getCampaigns(currentUser.id);
-            console.log("All : ",response)
 
             if (response) {
               setAllCampaigns(response)
@@ -56,6 +55,7 @@ const Dashboard:React.FC = () => {
         };
 
         fetchCampaigns();
+
   },[])
 
   const drawChart = (data: any, selectedCampaign:string) => {
@@ -134,7 +134,6 @@ const Dashboard:React.FC = () => {
   const fetchData = async (selectedValue: string) => {
     if (!user)
       return
-
     try {
       const response = await getCampaign({user_id: user.id, campaign_id: selectedValue});
       setCampaignTargetData(response)   
@@ -155,52 +154,61 @@ const Dashboard:React.FC = () => {
   if (!options) return <p>No have no campaigns data yet</p>
 
   return (
-    <div>
-      <MyTitle name={'Dashboard'}/>
+    <div >
+      <MyTitle name={'Dashboard'} color='white'/>
       <label>Choose a Campaign</label>
       <SelectComponent />
       { selected &&
         <>
         <div className='separator'></div>
-        <MyTitle name={`📊 ${selected}`} variant='subheader'/>
+        <MyTitle name={`${selected}`} variant='subheader'/>
         <div className='dashboard'>
-        { pieClickTargetedRatioData && (
-                <div className='chart'>
-                  <h3>Phished & Submitted by All Targeted (%)</h3>
-                  <DoughnutChart data={pieClickTargetedRatioData}/>
-                </div>
-              
-              )}
-            <div className='dashboard-splitted chart'>
-              {barDaySubmissionsData && (
-                <div>
-                  <h3>Submissions per Day</h3>
-                  <BarChart data={barDaySubmissionsData} /> 
-                </div>
-              )}
-              {lineHourSubmissionsData && (
-                <div>
-                  <h3>Submissions per Hour</h3>
-                  <LineChart data={lineHourSubmissionsData}/>
-
-                </div>
-              )}
-            </div>
+      
+            
             <div className='dashboard-splitted'>
-              {barClicksData && (
-                <div>
-                  <h3>Phished & Submitted</h3>
+               {barClicksData && (
+                <div className='chart'>
+                <h3>Phished & Submitted</h3>
                   <BarChart data={barClicksData} isHorizontal={true} />
                 </div>
-              )}
+              )} 
               { barClickTargetedRatioData && (
-                <div>
+                <div className='chart'>
                   <h3>Phished & Submitted by All Targeted (%)</h3>
                   <StackedPercentBarChart data={barClickTargetedRatioData}/>
                 </div>
               
               )}
+              { pieClickTargetedRatioData && (
+                <div className='chart'>
+                  <h3>Phished & Submitted by All Targeted (%)</h3>
+                    <DoughnutChart data={pieClickTargetedRatioData}/>
+                </div>
               
+              )} 
+              
+            </div>
+
+            <div className='dashboard-splitted'>
+              {barDaySubmissionsData && (
+                <div className='chart'>
+                  <h3>Submissions per Day</h3>
+                  <BarChart data={barDaySubmissionsData} /> 
+                </div>
+              )}
+              {lineHourSubmissionsData && (
+                <div className='chart'>
+                  <h3>Submissions per Hour</h3>
+                  <LineChart data={lineHourSubmissionsData}/>
+
+                </div>
+              )}
+              {barDaySubmissionsData && (
+                <div className='chart'>
+                  <h3>Submissions per Day</h3>
+                  <BarChart data={barDaySubmissionsData} /> 
+                </div>
+              )}
             </div>
         </div>
         </>

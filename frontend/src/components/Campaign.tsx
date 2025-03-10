@@ -33,7 +33,7 @@ const Campaign: React.FC = () => {
 
   return (
     <div>
-        <MyTitle name={'Campaign'} variant='subheader'/>
+        <MyTitle name={'Campaign'} color='white'/>
         <br></br>
       {campaign && campaign.data && 
           <>

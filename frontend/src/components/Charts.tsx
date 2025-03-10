@@ -10,7 +10,8 @@ import {
   Legend,
   PointElement,
   LineElement,
-  ArcElement
+  ArcElement,
+  scales
 } from "chart.js";
 
 // Register required components
@@ -36,6 +37,7 @@ export interface MyChartData {
 export interface MyChartProps {
     data: MyChartData;
     isHorizontal?: boolean;
+    
 }
 
 // Line Chart Component
@@ -69,11 +71,13 @@ export const BarChart: React.FC<MyChartProps> = ({ data, isHorizontal=false }) =
 
   const options = {
     indexAxis: isHorizontal ? "y" as const : "x" as const,// ✅ This makes the bar chart horizontal
+    responsive: true,
+  
+
   };
 
   return <Bar data={chartData} options={options} />;
 };
-
 
 
 export const StackedPercentBarChart: React.FC<MyChartProps> = ({ data }) => {
@@ -93,8 +97,8 @@ export const StackedPercentBarChart: React.FC<MyChartProps> = ({ data }) => {
       plugins: {
         tooltip: {
           callbacks: {
-            label: (tooltipItem: any) => {
-              let total = tooltipItem.dataset.data.reduce((sum: number, value: number) => sum + value, 0);
+            label: (tooltipItem:any) => {
+              let total = tooltipItem.dataset.data.reduce((sum, value) => sum + value, 0);
               let percentage = ((tooltipItem.raw / total) * 100).toFixed(2) + "%";
               return `${tooltipItem.dataset.label}: ${tooltipItem.raw} (${percentage})`;
             },
@@ -110,11 +114,13 @@ export const StackedPercentBarChart: React.FC<MyChartProps> = ({ data }) => {
           min: 0,
           max: 100, // Convert values to percentage
           ticks: {
-            callback: (value: any) => `${value}%`,
+            callback: (value:any) => `${value}%`, // Format ticks to display as percentage
           },
         },
       },
     };
+    
+    
   
     return <Bar data={chartData} options={options} />;
   };
@@ -126,12 +132,29 @@ export const DoughnutChart: React.FC<MyChartProps> = ({ data }) => {
       {
         label: data.legend,
         data: data.values,
-        backgroundColor: data.colors ? data.colors : ["blue", "red", "green"],
+        backgroundColor: data.colors ? data.colors : ["dodgerblue", "orange", "green"],
       },
     ],
   };
 
-  return <Doughnut data={chartData} />;
+  const options = {
+    responsive: true,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (tooltipItem:any) => {
+            let total = tooltipItem.dataset.data.reduce((sum: number, value: number) => sum + value, 0);
+            let percentage = ((tooltipItem.raw / total) * 100).toFixed(2) + "%";
+            return `${tooltipItem.dataset.label}: ${tooltipItem.raw} (${percentage})`;
+          },
+        },
+      },
+    },
+    cutout: '60%',  // Control the "donut hole" size (percentage)
+    aspectRatio: 2, // Adjust this value to resize the chart (1 = square, 2 = wider)
+  };
+
+  return <Doughnut data={chartData} options={options}/>;
 };
 
 export default { LineChart, BarChart, DoughnutChart };

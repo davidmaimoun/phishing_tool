@@ -57,11 +57,18 @@ const Campaigns: React.FC = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ flex: 1 }}>
-          <MyTitle name={'Campaigns'} variant='subheader'/>  
-        </div>
-        <div>
+      
+          <MyTitle name={'Campaigns'} color='white'/>  
+          <br></br>
+       
+       
+      {error && <p>{error}</p>}
+      {campaigns && campaigns.length > 0 && 
+        <>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <h3>Campaigns Total</h3>
+          </div>
           <Link to='/campaigns/new-campaign'>
             <MyButton 
               label='+ New Campaign'
@@ -69,9 +76,7 @@ const Campaigns: React.FC = () => {
           </Link>
         </div>
 
-      </div>
-      {error && <p>{error}</p>}
-      {campaigns && campaigns.length > 0 && 
+
           <table >
           
             <thead>
@@ -114,6 +119,7 @@ const Campaigns: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </>
             
           
       }

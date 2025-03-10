@@ -35,9 +35,9 @@ const AppLayout: React.FC = () => {
           </aside>
         </div>
 
-        <div className="footer">
+        {/* <div className="footer">
           werer
-        </div>
+        </div> */}
   
     </div>
   

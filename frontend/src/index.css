@@ -9,7 +9,7 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* variables */
-  --primary-color: #29306e;  
+  --primary-color: #274781;  
   --secondary-color: #5177e9be; 
   --danger-color: #e74c3c;  
   --info-color: dodgerblue;  
@@ -19,6 +19,7 @@
   --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
   --box-shadow-more: 0 8px 16px rgba(0, 0, 0, 0.2); 
   --border-width: 1px;
+
 }
 
 a {
@@ -31,7 +32,7 @@ a:hover {
 }
 
 body {
-  min-height: 100vh;
+  background: linear-gradient(to bottom, #2c73c0 25%, rgb(250, 249, 249) 25%);
 } 
 
 h1 {
@@ -261,25 +262,27 @@ textarea::placeholder {
 
 
 /* Dashboard ********************************/
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* Space between rows */
-}
+
 
 .dashboard-splitted {
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
-.chart {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
 
+.chart {
+  padding: 20px;
+  margin-bottom: 10px;
+  align-items: center;
+  border-radius: 12px;
+  border: 1px solid #f2f2f2;
+  box-shadow: 0px 0px 1px #858484;
+  background-color: white;
+  height: 85%; /* Make the chart container take full height */
+  display: flex; /* Use flexbox to center the content */
+  flex-direction: column; /* Optional: stack items vertically */
+}
 
 
 /* Header */
@@ -289,7 +292,8 @@ textarea::placeholder {
   align-items: center;
   padding: 1rem;
   flex-shrink: 0;
-  /* background-color: #f4f4f4; */
+  color: white;
+  /* background-color: var(--primary-color) */
   /* border-bottom: 1px solid #ddd; */
 }
 
@@ -311,7 +315,7 @@ textarea::placeholder {
 
 .nav-link {
   text-decoration: none;
-  color: var(--primary-color);
+  color: white;
   font-weight: bold;
   font-size: 16px;
 }
@@ -331,25 +335,26 @@ textarea::placeholder {
 
 .main-content {
   display: flex;
-  flex-grow: 1; /* Take up the remaining space */
+  flex-grow: 1;
+  background: linear-gradient(to bottom, #2c73c0 15%, rgb(245, 245, 245) 15%);
+
+
 }
 
 .left-side {
-  width: 15%;
-  /* background-color: #f1f1f1; */
+  width: 10%;
   padding: 10px;
   flex-shrink: 0;
 }
 
 .main {
-  background-color: #ffffff;
   width: 70%;
-  padding: 10px;
-  flex-grow: 1; /* This will take up the remaining space */
+  padding: 18px;
+  flex-grow: 1; 
 }
 
 .right-side {
-  width: 15%;
+  width: 10%;
   padding: 10px;
   flex-shrink: 0;
 }

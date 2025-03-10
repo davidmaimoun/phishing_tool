@@ -5,18 +5,19 @@ type TitleVariant = "header" | "subheader";
 interface TitleProps {
     name:string
     variant?:TitleVariant 
+    color?:string
 }
-const MyTitle:React.FC<TitleProps> = ({name, variant='header'}) => {
-    return getTitle(name, variant)
+const MyTitle:React.FC<TitleProps> = ({name, variant='header', color}) => {
+    return getTitle(name, variant, color)
   
 }
 
-const getTitle = (name:string, variant: TitleVariant) => {
+const getTitle = (name:string, variant: TitleVariant, color?:string) => {
     switch(variant){
         case 'subheader':  
-            return <h2>{name}</h2>
+            return <h2 style={{color: color}}>{name}</h2>
         default:
-            return <h1>{name}</h1>
+            return <h1 style={{color: color}}>{name}</h1>
     }
 
 }
