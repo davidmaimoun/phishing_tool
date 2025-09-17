@@ -41,6 +41,7 @@ const Campaign: React.FC = () => {
             <table>
               <thead>
                 <tr>
+                <th>#</th>
                 <th>Date</th>
                 <th>Time</th>
                 <th>Username</th>
@@ -53,6 +54,7 @@ const Campaign: React.FC = () => {
               <tbody>
                 {campaign.data.map((c, i) => (
                   <tr key={i}>
+                    <td>{i+1}</td>
                     <td>{c.date}</td>
                     <td>{c.time}</td>
                     <td>{c.username}</td>
