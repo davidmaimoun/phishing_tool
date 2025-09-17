@@ -76,11 +76,11 @@ const Campaigns: React.FC = () => {
           
             <thead>
               <tr>
-                {/* <th>ID</th> */}
+                <th>#</th>
                 <th>Date created</th>
                 <th>Name</th>
                 <th>Page</th>
-                <th>Users Number</th>
+                <th>Targets Number</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -89,7 +89,7 @@ const Campaigns: React.FC = () => {
               {campaigns.map(({ data: campaignData }: CampaignsDB, i) => (
                 
                 <tr key={i}>
-                  {/* <td>{c[0]}</td> */}
+                  <td>{i+1}</td>
                   <td>{campaignData.date_created}</td> 
                   <td>{campaignData.name}</td>
                   <td>{campaignData.page_name}</td> 
