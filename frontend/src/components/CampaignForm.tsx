@@ -133,8 +133,8 @@ const CampaignForm: React.FC = () => {
                 <p>In creating the campaign, you will get a JS script to add in your own template.</p>
                 <p>The form must contain:</p>
                 <ul>
-                  <li>An input attribut: <i>name="email"</i> </li>
-                  <li>An input attribut: <i>name="pass"</i> </li>
+                  <li>An input attribut: <code>name="email"</code> </li>
+                  <li>An input attribut: <code>name="pass"</code> </li>
                 </ul>
               </div>
             </>
